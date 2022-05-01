@@ -36,4 +36,10 @@ def make_table(data, headers='keys', fmt='fancy_grid'):
         # Later we need splitting of table into an array of smaller tables to be used by discord
     
     return table
-    
+
+
+def is_future(year):
+    """Return True if `year` is greater than current year."""
+    if year == 'current':
+        return False
+    return datetime.now().year < int(year)

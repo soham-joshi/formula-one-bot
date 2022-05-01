@@ -42,6 +42,27 @@ async def get_race_schedule():
     
     return None
 
+async def get_team_standings(season):
+    url = f'{BASE_URL}/{season}/constructorStandings'
+    soup = await get_soup(url)
+    if soup:
+        standings = soup.standingslist
+        results = {
+            'season': standings['season'],
+            'round': standings['round'],
+            'data': [],
+        }
+        for standing in standings.find_all('constructorstanding'):
+            results['data'].append(
+                {
+                    'Pos': int(standing['position']),
+                    'Team': standing.constructor.find('name').string,
+                    'Points': int(standing['points']),
+                    'Wins': int(standing['wins']),
+                }
+            )
+        return results
+    
 # if(__name__ == "__main__"):
 #     output = asyncio.run(get_soup(f'{BASE_URL}/current'))
 #     races = output.find_all('race')
