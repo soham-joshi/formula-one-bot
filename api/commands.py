@@ -20,3 +20,18 @@ bot = commands.Bot(
 async def on_ready():
     print('I have logged in as {0.user}'.format(bot))
 
+@bot.event
+async def on_command(ctx):
+    channel = ctx.message.channel
+    user = ctx.message.author
+    print(f'Command: {ctx.prefix}{ctx.command} in {channel} by {user}')
+
+# ===================
+# Main command group
+# ==================
+
+
+@bot.command(aliases=['calendar', 'schedule'])
+async def races(ctx, *args):
+    """Display the full race schedule for the current season."""
+    await ctx.send("About to be implemented.")
