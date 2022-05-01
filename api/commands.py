@@ -1,9 +1,10 @@
+from email import parser
 from discord import Colour, File
 from discord.activity import Activity, ActivityType
 from discord.embeds import Embed
 from discord.ext import commands
 
-from api import api_calls
+from api import parser
 from api.config import CONFIG
 from api.utils import make_table
 
@@ -34,8 +35,8 @@ async def on_command(ctx):
 @bot.command(aliases=['calendar', 'schedule'])
 async def races(ctx, *args):
     """Display the full race schedule for the current season."""
-    result = await api_calls.get_race_schedule()
-    print(result)
+    result = await parser.get_race_schedule()
+    # print(result)
     # Use simple table to not exceed content limit
     table = make_table(result['data'], fmt='simple')
     # target = await get_target(ctx, 'table')

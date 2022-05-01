@@ -37,6 +37,3 @@ async def test_func():
     response = await fetch('http://ergast.com/api/f1/current')
     print(response)
     return response
-
-if(__name__ == "__main__"):
-    asyncio.run(test_func())
