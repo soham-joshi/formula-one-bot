@@ -34,4 +34,10 @@ async def on_command(ctx):
 @bot.command(aliases=['calendar', 'schedule'])
 async def races(ctx, *args):
     """Display the full race schedule for the current season."""
-    await ctx.send("About to be implemented.")
+    result = await api_calls.get_race_schedule()
+    print(result)
+    # Use simple table to not exceed content limit
+    table = make_table(result['data'], fmt='simple')
+    # target = await get_target(ctx, 'table')
+    await ctx.send(f"**{result['season']} Formula 1 Race Calendar**\n")
+    await ctx.send(f"```\n{table}\n```")
