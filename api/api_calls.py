@@ -1,46 +1,39 @@
 """
-Utilities to grab latest F1 results from Ergast API.
+Perform asyncronous web requests.
 """
+from urllib import response
+import aiohttp
+import logging
 import asyncio
-from bs4 import BeautifulSoup
-from datetime import datetime
-from api.fetch import fetch
+import requests
 
-from api import utils
+SESSION_TIMEOUT = 120
 
-BASE_URL = 'http://ergast.com/api/f1'
+logger = logging.getLogger(__name__)
 
 
-async def get_soup(url):
-    """Request the URL and return response as BeautifulSoup object or None."""
-    res = await fetch(url)
-    if res is None:
-        return None
-
-    return BeautifulSoup(res, 'lxml')
+def is_xml(res): 
+    return 'application/xml' in res.content_type
 
 
-async def get_race_schedule():
+async def send_request(session, url):
+    """Attempt to request the URL. Returns content of the Response if successful or None."""
+    # open connection context, all response handling must be within
+    async with session.get(url) as res:
+        if is_xml(res):
+            content = await res.read()
+        return content
 
-    url = f'{BASE_URL}/current'
-    soup = await get_soup(url)
-    if soup:
-        races = soup.find_all('race')
-        results = {
-            'season': soup.racetable['season'],
-            'data': []
-        }
-        for race in races:
-            results['data'].append(
-                {
-                    'Round': int(race['round']),
-                    'Circuit': race.circuit.circuitname.string,
-                    'Date': utils.date_parser(race.date.string),
-                    'Time': utils.time_parser(race.time.string),
-                    'Country': race.location.country.string,
-                }
-            )
-        return results
-    
-    return None
 
+async def fetch(url):
+    """Request the url and await response. Returns response content or None."""
+    tmout = aiohttp.ClientTimeout(total=SESSION_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=tmout) as session:
+        res = await send_request(session, url)
+        return res
+
+
+async def test_func():
+    response = await fetch('http://ergast.com/api/f1/current')
+    print(response)
+    return response

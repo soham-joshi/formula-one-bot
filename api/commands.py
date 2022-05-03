@@ -6,8 +6,8 @@ from discord.ext import commands
 from api import api_calls
 from api.config import CONFIG
 from api.utils import make_table
-
-
+from api import parser
+from api import utils
 
 # Prefix includes the config symbol and the 'f1' name with hard-coded space
 bot = commands.AutoShardedBot(
@@ -55,3 +55,26 @@ async def races(ctx, *args):
     await ctx.send(f"**{result['season']} Formula 1 Race Calendar**\n")
     await ctx.send(f"```\n{table}\n```")
 
+async def check_season(ctx, season):
+    """Raise error if the given season is in the future."""
+    if utils.is_future(season):
+        await ctx.send(f"Can't predict future :thinking:")
+        raise commands.BadArgument('Given season is in the future.')
+
+@bot.command(aliases=['teams', 'constructors'])
+async def season_standings_teams(ctx, season='current'):
+    """Display Constructor Championship standings as of the last race or `season`.
+    Usage:
+    ------
+        !f1 wcc            Current WCC standings as of the last race.
+        !f1 wcc [season]   WCC standings from [season].
+    """
+    await check_season(ctx, season)
+    result = await parser.get_team_standings(season)
+    table = make_table(result['data'])
+    
+    await ctx.send(
+        f"**World Constructor Championship**\n" +
+        f"Season: {result['season']} Round: {result['round']}\n"
+    )
+    await ctx.send(f"```\n{table}\n```")
