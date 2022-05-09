@@ -54,12 +54,12 @@ class UtilityTests(BaseTest):
         self.assertEqual(seconds[1], 89.505)
         self.assertEqual(seconds[2], 0.0)
 
-    # def test_lap_time_rankings(self,data):
-    #     times = sr.best_laps
-    #     sorted_times = utils.rank_best_lap_times(times)
-    #     self.assertTrue(sorted_times[0]['Rank'] == 1)
-    #     prev_rank = 0
-    #     self.assertTrue(t['Rank'] > prev_rank for t in sorted_times)
+    def test_lap_time_rankings(self):
+        times = sr.best_laps
+        sorted_times = utils.rank_best_lap_times(times)
+        self.assertTrue(sorted_times[0]['Rank'] == 1)
+        prev_rank = 0
+        self.assertTrue(t['Rank'] > prev_rank for t in sorted_times)
 
 if __name__ == '__main__':
     unittest.main()
