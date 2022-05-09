@@ -113,3 +113,9 @@ async def season_grid(ctx, season='current'):
         f"Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
+
+
+@bot.command(aliases=['source', 'git'])
+async def github(ctx, *args):
+    """Display a link to the GitHub repository."""
+    await ctx.send("https://github.com/soham-joshi/formula-one-bot")
