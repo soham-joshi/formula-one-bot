@@ -8,6 +8,8 @@ from api.config import CONFIG
 from api.utils import make_table
 from api import parser
 from api import utils
+import asyncio
+from api.utils import make_table, filter_times, rank_best_lap_times, rank_pitstops, filter_laps_by_driver
 from operator import itemgetter
 
 # Prefix includes the config symbol and the 'f1' name with hard-coded space
@@ -206,3 +208,33 @@ async def career(ctx, driver_id):
         inline=False
     )
     await ctx.send(embed=embed)
+
+@bot.command(aliases=['bestlap'])
+async def best(ctx, filter=None, season='current', rnd='last'):
+    """Display the best lap times and delta for each driver in `round`.
+    If no `round` specified returns results for the most recent race.
+    Usage:
+    ---------------
+        !f1 best                             Return all best laps for the latest race.
+        !f1 best [filter] [<season> <round>] Return best laps sorted by [filter].
+        Optional filter:
+        ----------------
+        `all`     -  Do not apply a filter.
+        `fastest` -  Only show the fastest lap of the race.
+        `slowest` -  Only show the slowest lap of the race.
+        `top`     -  Top 5 fastest drivers.
+        `bottom`  -  Bottom 5 slowest drivers.
+    """
+    if filter not in ['all', 'top', 'fastest', 'slowest', 'bottom', None]:
+        await ctx.send("Invalid filter given.")
+        raise commands.BadArgument(message="Invalid filter given.")
+    await check_season(ctx, season)
+    results = await parser.get_best_laps(rnd, season)
+    sorted_times = rank_best_lap_times(results)
+    filtered = filter_times(sorted_times, filter)
+    table = make_table(filtered)
+    await ctx.send(
+        f"**Fastest laps ranked {filter}**\n" +
+        f"{results['season']} {results['race']}"
+    )
+    await ctx.send(f"```\n{table}\n```")
