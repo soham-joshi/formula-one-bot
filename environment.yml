@@ -1,0 +1,4 @@
+name: spe
+channels:
+  - defaults
+prefix: /home/soham/miniconda3/envs/spe
