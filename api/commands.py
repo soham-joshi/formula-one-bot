@@ -238,3 +238,51 @@ async def best(ctx, filter=None, season='current', rnd='last'):
         f"{results['season']} {results['race']}"
     )
     await ctx.send(f"```\n{table}\n```")
+
+@bot.command(aliases=['pits', 'pitstops'])
+async def stops(ctx, filter, season='current', rnd='last'):
+    """Display pitstops for each driver in the race, optionally sorted with filter.
+    If no `round` specified returns results for the most recent race. Data not available
+    before 2012.
+    Usage:
+    ---------------
+        !f1 stops <filter> [season] [round]     Return pitstops sorted by [filter].
+        !f1 stops <driver_id> [season] [round]  Return pitstops for the driver.
+        Filter:
+        ----------------
+        `<driver_id>`  -  Get the stops for the driver.
+        `fastest` -  Only show the fastest pitstop the race.
+        `slowest` -  Only show the slowest pitstop the race.
+        `top`     -  Top 5 fastest pitstops.
+        `bottom`  -  Bottom 5 slowest pitstops.
+    """
+
+    # Pit data only available from 2012 so catch seasons before
+    if not season == 'current':
+        if int(season) < 2012:
+            await ctx.send("Pitstop data not available before 2012.")
+            raise commands.BadArgument(message="Tried to get pitstops before 2012.")
+    await check_season(ctx, season)
+
+    # Get stops
+    res = await parser.get_pitstops(rnd, season)
+
+    # The filter is for stop duration
+    if filter in ['top', 'bottom', 'fastest', 'slowest']:
+        sorted_times = rank_pitstops(res)
+        filtered = filter_times(sorted_times, filter)
+    # The filter is for all stops by a driver
+    else:
+        try:
+            driver = parser.get_driver_info(filter)
+            filtered = [s for s in res['data'] if s['Driver'] == driver['code']]
+        except:
+            await ctx.send("Invalid filter or driver provided.")
+
+    table = make_table(filtered)
+
+    await ctx.send(
+        f"**Pit stops ranked {filter}**\n" +
+        f"{res['season']} {res['race']}"
+    )
+    await ctx.send(f"```\n{table}\n```")
