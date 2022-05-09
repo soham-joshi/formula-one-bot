@@ -8,6 +8,7 @@ from api.config import CONFIG
 from api.utils import make_table
 from api import parser
 from api import utils
+from operator import itemgetter
 
 # Prefix includes the config symbol and the 'f1' name with hard-coded space
 bot = commands.AutoShardedBot(
@@ -95,3 +96,20 @@ async def world_drivers_championship(ctx, season='current'):
     )
     await ctx.send(f"```\n{table}\n```")
 
+@bot.command(aliases=['grid'])
+async def season_grid(ctx, season='current'):
+    """Display all the drivers and teams participating in the current season or `season`.
+    Usage:
+    ------
+        !f1 grid            All drivers and teams in the current season as of the last race.
+        !f1 grid [season]   All drivers and teams at the end of [season].
+    """
+    await check_season(ctx, season)
+    result = await parser.get_all_drivers_and_teams_for_season(season)
+    # Use simple table to not exceed content limit
+    table = make_table(sorted(result['data'], key=itemgetter('Team')), fmt='simple')
+    await ctx.send(
+        f"**Formula 1 {result['season']} Grid**\n" +
+        f"Round: {result['round']}\n"
+    )
+    await ctx.send(f"```\n{table}\n```")
