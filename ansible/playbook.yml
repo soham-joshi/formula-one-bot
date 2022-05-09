@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: remove docker images
+      shell: docker image rm -f sohamjoshi/formula-one-bot:latest
+    - name: pruning the docker system
+      shell: docker system prune
+    - name: Pull sohamjoshi/formula-one-bot
+      shell: docker pull sohamjoshi/formula-one-bot
