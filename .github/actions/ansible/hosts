@@ -1,0 +1,8 @@
+[azure]
+20.219.22.152
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=saksham_f1
+ansible_ssh_user=saksham_f1
+ansible_python_interpreter=/usr/bin/python3
