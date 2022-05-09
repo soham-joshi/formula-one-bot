@@ -63,6 +63,11 @@ def make_table(data, headers='keys', fmt='fancy_grid'):
 
     return table
 
+def lap_time_to_seconds(time_str):
+    """Returns the lap time string as a float representing total seconds."""
+    min, secs = time_str.split(':')
+    total = int(min) * 60 + float(secs)
+    return total
 
 def is_future(year):
     """Return True if `year` is greater than current year."""

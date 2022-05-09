@@ -20,7 +20,6 @@ from api.TestingHelpers.responses import SampleResponses as sr
 
 class UtilityTests(BaseTest):
     """Testing utility functions not tied to API data."""
-
     def test_utility_age(self):
         age_str = '2001-04-25'
         age = utils.age(age_str[:4])
@@ -39,11 +38,28 @@ class UtilityTests(BaseTest):
 
     def test_is_year_in_future(self):
         year = '3333'
+        # print(utils.is_future(year))
         self.assertTrue(utils.is_future(year))
 
     def test_is_year_in_past(self):
         year = '1111'
+        # print(utils.is_future(year))
         self.assertFalse(utils.is_future(year))
+
+    def test_lap_time_to_seconds(self):
+        laps = ['1:30.202', '1:29.505', '0:00.000']
+        # print([utils.lap_time_to_seconds(x) for x in laps])
+        seconds = [utils.lap_time_to_seconds(x) for x in laps]
+        self.assertEqual(seconds[0], 90.202)
+        self.assertEqual(seconds[1], 89.505)
+        self.assertEqual(seconds[2], 0.0)
+
+    # def test_lap_time_rankings(self,data):
+    #     times = sr.best_laps
+    #     sorted_times = utils.rank_best_lap_times(times)
+    #     self.assertTrue(sorted_times[0]['Rank'] == 1)
+    #     prev_rank = 0
+    #     self.assertTrue(t['Rank'] > prev_rank for t in sorted_times)
 
 if __name__ == '__main__':
     unittest.main()
