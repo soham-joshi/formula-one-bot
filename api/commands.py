@@ -119,3 +119,20 @@ async def season_grid(ctx, season='current'):
 async def github(ctx, *args):
     """Display a link to the GitHub repository."""
     await ctx.send("https://github.com/soham-joshi/formula-one-bot")
+
+
+@bot.command(aliases=['finish'])
+async def results(ctx, season='current', rnd='last'):
+    """Results for race `round`. Default most recent.
+    Displays an embed with details about the race event and wikipedia link. Followed by table
+    of results. Data includes finishing position, fastest lap, finish status, pit stops per driver.
+    Usage:
+    ------
+        !f1 results                     Results for last race.
+        !f1 results [<season> <round>]  Results for [round] in [season].
+    """
+    await check_season(ctx, season)
+    result = await parser.get_race_results(rnd, season)
+    table = make_table(result['data'], fmt='simple')
+    await ctx.send(f"**Race Results - {result['race']} ({result['season']})**")
+    await ctx.send(f"```\n{table}\n```")
