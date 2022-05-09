@@ -136,3 +136,18 @@ async def results(ctx, season='current', rnd='last'):
     table = make_table(result['data'], fmt='simple')
     await ctx.send(f"**Race Results - {result['race']} ({result['season']})**")
     await ctx.send(f"```\n{table}\n```")
+
+@bot.command(aliases=['quali'])
+async def qualifying(ctx, season='current', rnd='last'):
+    """Qualifying results for `round`. Defaults to latest.
+    Includes best Q1, Q2 and Q3 times per driver.
+    Usage:
+    ------
+        !f1 quali                    Latest results.
+        !f1 quali [<season> <round>] Results for [round] in [season].
+    """
+    await check_season(ctx, season)
+    result = await parser.get_qualifying_results(rnd, season)
+    table = make_table(result['data'])
+    await ctx.send(f"**Qualifying Results - {result['race']} ({result['season']})**")
+    await ctx.send(f"```\n{table}\n```")
