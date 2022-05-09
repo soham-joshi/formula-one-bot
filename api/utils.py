@@ -4,6 +4,7 @@ import logging
 from operator import itemgetter
 from tabulate import tabulate
 from datetime import date, datetime
+from api.errors import MessageTooLongError
 
 from api.config import DATA_DIR
 # from f1.errors import MessageTooLongError, DriverNotFoundError
@@ -57,7 +58,9 @@ def make_table(data, headers='keys', fmt='fancy_grid'):
         table = tabulate(data, headers=headers, tablefmt='simple')
         # cannot send table if too large even without borders
         # Later we need splitting of table into an array of smaller tables to be used by discord
-    
+        if too_long(table):
+            raise MessageTooLongError('Table too large to send.', table)
+
     return table
 
 
