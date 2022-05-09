@@ -49,5 +49,5 @@ jobs:
       id: build_push
       with:
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/calculator:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/formula-one-bot:latest
 
