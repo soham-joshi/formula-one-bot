@@ -1,4 +1,3 @@
 name: spe
 channels:
   - defaults
-prefix: /home/soham_saksham/miniconda3/envs/spe
