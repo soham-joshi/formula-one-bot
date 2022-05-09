@@ -61,5 +61,55 @@ class UtilityTests(BaseTest):
         prev_rank = 0
         self.assertTrue(t['Rank'] > prev_rank for t in sorted_times)
 
+    def test_filter_laps(self):
+        laps = {'data': {
+            1: [{'id': 'vettel', 'pos': 1, 'time': '1:10.202'},
+                {'id': 'max', 'pos': 2, 'time': '1:20.205'},
+                {'id': 'leclerc', 'pos': 3, 'time': '1:30.205'}],
+            2: [{'id': 'vettel', 'pos': 2, 'time': '1:11.102'},
+                {'id': 'max', 'pos': 1, 'time': '1:21.905'},
+                {'id': 'leclerc', 'pos': 3, 'time': '1:31.105'}]
+        }}
+
+        filter_laps = utils.filter_laps_by_driver(laps, ['vettel'])
+        # Only one driver given, so check only one timing
+        self.assertEqual(len(filter_laps['data'][1]), 1, "Timing entries for 1 driver arg don't match result.")
+        # Check driver matches
+        self.assertEqual(filter_laps['data'][1][0]['id'], 'vettel', "Driver ID doesn't match provided arg.")
+
+    def test_filter_laps_multiple_drivers(self):
+        laps = {'data': {
+            1: [{'id': 'vettel', 'pos': 1, 'time': '1:10.202'},
+                {'id': 'max', 'pos': 2, 'time': '1:20.205'},
+                {'id': 'leclerc', 'pos': 3, 'time': '1:30.205'}],
+            2: [{'id': 'vettel', 'pos': 2, 'time': '1:11.102'},
+                {'id': 'max', 'pos': 1, 'time': '1:21.905'},
+                {'id': 'leclerc', 'pos': 3, 'time': '1:31.105'}]
+        }}
+
+        filter_laps = utils.filter_laps_by_driver(laps, ['max', 'vettel'])
+        # Two drivers given, check timings for both
+        self.assertEqual(len(filter_laps['data'][1]), 2, "Timing entries for 2 drivers args don't match result.")
+        # Check the drivers
+        self.assertEqual(filter_laps['data'][1][0]['id'], 'vettel')
+        self.assertEqual(filter_laps['data'][1][1]['id'], 'max')
+
+    def test_filter_times(self):
+        times = sr.best_laps
+        sorted_times = utils.rank_best_lap_times(times)
+        [fast, slow, top, bottom] = [
+            utils.filter_times(sorted_times, 'fastest'),
+            utils.filter_times(sorted_times, 'slowest'),
+            utils.filter_times(sorted_times, 'top'),
+            utils.filter_times(sorted_times, 'bottom')
+        ]
+        # Check lengths
+        self.assertEqual(len(fast), 1, "Fastest filter should return 1 item.")
+        self.assertEqual(len(slow), 1, "Slowest filter should return 1 item.")
+        self.assertEqual(len(top), 5, "Should return top 5.")
+        self.assertEqual(len(bottom), 5, "Should return bottom 5.")
+        # Compare data with mocked model data which has 7 laps
+        self.assertEqual(fast[0]['Rank'], 1, "Fastest should return top rank.")
+        self.assertEqual(slow[0]['Rank'], 7, "Slowest should return bottom rank.")
 if __name__ == '__main__':
     unittest.main()
