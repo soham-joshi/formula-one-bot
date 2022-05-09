@@ -78,3 +78,20 @@ async def season_standings_teams(ctx, season='current'):
         f"Season: {result['season']} Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
+
+@bot.command(aliases=['drivers', 'championship'])
+async def world_drivers_championship(ctx, season='current'):
+    """Display the Driver Championship standings as of the last race or `season`.
+    Usage:
+    ------
+        !f1 wdc [season]    WDC standings from [season].
+    """
+    await check_season(ctx, season)
+    result = await parser.get_season_driver_standings(season)
+    table = make_table(result['data'], fmt='simple')
+    await ctx.send(
+        f"**World Driver Championship**\n" +
+        f"Season: {result['season']} Round: {result['round']}\n"
+    )
+    await ctx.send(f"```\n{table}\n```")
+
