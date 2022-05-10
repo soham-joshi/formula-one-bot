@@ -11,6 +11,9 @@ from api import utils
 import asyncio
 from api.utils import make_table, filter_times, rank_best_lap_times, rank_pitstops, filter_laps_by_driver
 from operator import itemgetter
+import logging
+
+logging.getLogger("discord").setLevel(logging.WARNING)
 
 # Prefix includes the config symbol and the 'f1' name with hard-coded space
 bot = commands.AutoShardedBot(
@@ -32,7 +35,8 @@ async def on_command(ctx):
     shard_id = ctx.guild.shard_id
     shard = bot.get_shard(shard_id)
     user = ctx.message.author
-    print(f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
+    print(f'{ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
+    
     # logger.info()
 
 
@@ -50,7 +54,7 @@ async def on_command_completion(ctx):
 @bot.command(aliases=['calendar', 'schedule'])
 async def races(ctx, *args):
     """Display the full race schedule for the current season."""
-    result = await api_calls.get_race_schedule()
+    result = await parser.get_race_schedule_calendar()
     # print(result)
     # Use simple table to not exceed content limit
     table = make_table(result['data'], fmt='simple')
