@@ -763,6 +763,205 @@ async def get_driver_wins(driver_id):
                 }
             )
         return res
+async def get_driver_standings(season):
+    """Get the driver championship standings.
+    Fetches results from API. Response XML is parsed into a list of dicts to be tabulated.
+    Data includes position, driver code, total points and wins.
+    Parameters
+    ----------
+    `season` : int
+    Returns
+    -------
+    `res` : dict
+        {
+            'season': str,
+            'round': str,
+            'data': list[dict] [{
+                'Pos': int,
+                'Driver': str,
+                'Points': int,
+                'Wins': int,
+            }]
+        }
+    Raises
+    ------
+    `MissingDataError`
+        if API response unavailable.
+    """
+    url = f'{BASE_URL}/{season}/driverStandings'
+    soup = await get_soup(url)
+    if soup:
+        # tags are lowercase
+        standings = soup.standingslist
+        results = {
+            'season': standings['season'],
+            'round': standings['round'],
+            'data': [],
+        }
+        for standing in standings.find_all('driverstanding'):
+            results['data'].append(
+                {
+                    'Pos': int(standing['position']),
+                    'Driver': f"{standing.driver.givenname.string[0]} {standing.driver.familyname.string}",
+                    'Points': int(standing['points']),
+                    'Wins': int(standing['wins']),
+                }
+            )
+        return results
+
+async def get_all_laps(rnd, season):
+    """Get time and position data for each driver per lap in the race.
+    Parameters
+    ----------
+    `rnd`, `season` : int
+    Returns
+    -------
+    `res` : dict
+        {
+            'season': str,
+            'round': str,
+            'race': str,
+            'url': str,
+            'date': str,
+            'time': str,
+            'data': dict[list] - dict keys are lap number and values are list of dicts per driver:
+                {
+                    1: [ {'id': str, 'lap': int, 'pos': int, 'time': str} ... ],
+                    2: [ ... ],
+                    ...
+                }
+        }
+    Raises
+    ------
+    `MissingDataError`
+        if API response invalid.
+    """
+    url = f"{BASE_URL}/{season}/{rnd}/laps?limit=2000"
+    soup = await get_soup(url)
+    if soup:
+        race = soup.race
+        laps = race.lapslist.find_all('lap')
+        date, time = (race.date.string, race.time.string)
+        res = {
+            'season': race['season'],
+            'round': race['round'],
+            'race': race.racename.string,
+            'url': race['url'],
+            'date': f"{utils.date_parser(date)} {race['season']}",
+            'time': utils.time_parser(time),
+            'data': {},
+        }
+        for lap in laps:
+            res['data'][int(lap['number'])] = [
+                {
+                    'id': t['driverid'],
+                    'Pos': int(t['position']),
+                    'Time': t['time']
+                }
+                for t in lap.find_all('timing')]
+        return res
+
+async def get_all_laps_for_driver(driver, laps):
+    """Get the lap times for each lap of the race for one driver to tabulate.
+    Each dict entry contains lap number, race position and lap time. The API can take time to
+    process all of the lap time data.
+    Parameters
+    ----------
+    `driver_id` : dict
+        Driver dict as returned by `api.get_driver_info()`.
+    `laps` : dict
+        lap and timing data for the race as returned by `api.get_all_laps`.
+    Returns
+    -------
+    `res` : dict
+        {
+            'driver': dict,
+            'season': race['season'],
+            'round': race['round'],
+            'race': race.racename.string,
+            'url': race['url'],
+            'date': f"{utils.date_parser(date)} {race['season']}",
+            'time': utils.time_parser(time),
+            'data': list[dict] [{
+                'No': int,
+                'Position': int,
+                'Time': str,
+            }]
+        }
+    Raises
+    ------
+    `MissingDataError`
+        if response invalid.
+    """
+    # Force list as second arg as filter expects
+    driver_laps = utils.filter_laps_by_driver(laps, [driver['id']])
+    res = {
+        'driver': driver,
+        'season': laps['season'],
+        'round': laps['round'],
+        'race': laps['race'],
+        'url': laps['url'],
+        'date': laps['date'],
+        'time': laps['time'],
+        'data': []
+    }
+    # Loop over lap:timing_list pairs from filtered laps dict
+    # Only one driver to filter so each lap's timing list should have single entry at index 0
+    for lap, timing in driver_laps['data'].items():
+        res['data'].append(
+            {
+                'Lap': int(lap),
+                'Pos': int(timing[0]['Pos']),
+                'Time': timing[0]['Time'],
+            }
+        )
+    return res
+
+
+async def get_team_standings(season):
+    """Get the constructor championship standings.
+    Fetches results from API. Response XML is parsed into a list of dicts to be tabulated.
+    Data includes position, team, total points and wins.
+    Parameters
+    ----------
+    `season` : int
+    Returns
+    -------
+    `res` : dict
+        {
+            'season': str,
+            'round': str,
+            'data': list[dict] [{
+                'Pos': int,
+                'Team': str,
+                'Points': int,
+                'Wins': int,
+            }]
+        }
+    Raises
+    ------
+    `MissingDataError`
+        if API response unavailable.
+    """
+    url = f'{BASE_URL}/{season}/constructorStandings'
+    soup = await get_soup(url)
+    if soup:
+        standings = soup.standingslist
+        results = {
+            'season': standings['season'],
+            'round': standings['round'],
+            'data': [],
+        }
+        for standing in standings.find_all('constructorstanding'):
+            results['data'].append(
+                {
+                    'Pos': int(standing['position']),
+                    'Team': standing.constructor.find('name').string,
+                    'Points': int(standing['points']),
+                    'Wins': int(standing['wins']),
+                }
+            )
+        return results
 
 # Consider using /laps url without driver id, seems faster to get all laps
     # Then filter the response to find the driver id

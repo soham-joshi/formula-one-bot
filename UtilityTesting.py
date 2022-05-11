@@ -111,5 +111,7 @@ class UtilityTests(BaseTest):
         # Compare data with mocked model data which has 7 laps
         self.assertEqual(fast[0]['Rank'], 1, "Fastest should return top rank.")
         self.assertEqual(slow[0]['Rank'], 7, "Slowest should return bottom rank.")
+
+
 if __name__ == '__main__':
     unittest.main()
