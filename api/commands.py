@@ -14,8 +14,14 @@ from api.utils import make_table, filter_times, rank_best_lap_times, rank_pitsto
 from operator import itemgetter
 import logging
 
+logging.basicConfig(filename='discord.log', level=logging.DEBUG, format='%(levelname)s %(asctime)s %(message)s')
 
-logger = logging.getLogger(__name__)
+nonDiscordLog = logging.getLogger('MyLogs')
+handler = logging.FileHandler(filename='FormulaOneLogs.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(levelname)s %(asctime)s:%(name)s: %(message)s'))
+nonDiscordLog.addHandler(handler)
+
+# logger = logging.getLogger(__name__)
 
 def log_command(ctx, message = ""):
     channel = ctx.message.channel
@@ -44,7 +50,7 @@ bot = commands.AutoShardedBot(
 @bot.event
 async def on_ready():
     print('Bot logged in as {0.user}'.format(bot))
-    logger.info('Bot logged in as {0.user}'.format(bot))
+    logging.info('Bot logged in as {0.user}'.format(bot))
 
 
 
@@ -55,14 +61,14 @@ async def on_command(ctx):
     shard = bot.get_shard(shard_id)
     user = ctx.message.author
     # print(f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 
 @bot.event
 async def on_command_completion(ctx):
     # await ctx.message.add_reaction(u'🏁')
     print("Command completed!")
-    logger.info(log_command(ctx, "Command completed!"))
+    nonDiscordLog.info(log_command(ctx, "Command completed!"))
 
 
 # ===================
@@ -79,14 +85,14 @@ async def races(ctx, season = 'current' ):
     table = make_table(result['data'], fmt='simple')
     await ctx.send(f"**{result['season']} Formula 1 Race Calendar**\n")
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 
 async def check_season(ctx, season):
     """Raise error if the given season is in the future."""
     if utils.is_future(season):
         await ctx.send(f"Can't predict future :thinking:")
-        logger.error(log_command(ctx, message='Given season is in the future.'))
+        nonDiscordLog.error(log_command(ctx, message='Given season is in the future.'))
         raise commands.BadArgument('Given season is in the future.')
 
 @bot.command(aliases=['teams', 'constructors'])
@@ -106,7 +112,7 @@ async def season_standings_teams(ctx, season='current'):
         f"Season: {result['season']} Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['drivers', 'championship'])
 async def world_drivers_championship(ctx, season='current'):
@@ -123,7 +129,7 @@ async def world_drivers_championship(ctx, season='current'):
         f"Season: {result['season']} Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['grid'])
 async def season_grid(ctx, season='current'):
@@ -142,7 +148,7 @@ async def season_grid(ctx, season='current'):
         f"Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 
 @bot.command(aliases=['source', 'git'])
@@ -166,7 +172,7 @@ async def results(ctx, season='current', rnd='last'):
     table = make_table(result['data'], fmt='simple')
     await ctx.send(f"**Race Results - {result['race']} ({result['season']})**")
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['quali'])
 async def qualifying(ctx, season='current', rnd='last'):
@@ -182,7 +188,7 @@ async def qualifying(ctx, season='current', rnd='last'):
     table = make_table(result['data'])
     await ctx.send(f"**Qualifying Results - {result['race']} ({result['season']})**")
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 # @bot.command(aliases=['driver'])
 # async def career(ctx, driver_id):
@@ -238,7 +244,7 @@ async def qualifying(ctx, season='current', rnd='last'):
 #         inline=False
 #     )
 #     await ctx.send(embed=embed)
-#     logger.info(log_command(ctx))
+#     nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['bestlap'])
 async def best(ctx, filter=None, season='current', rnd='last'):
@@ -258,7 +264,7 @@ async def best(ctx, filter=None, season='current', rnd='last'):
     """
     if filter not in ['all', 'top', 'fastest', 'slowest', 'bottom', None]:
         await ctx.send("Invalid filter given.")
-        logger.info(log_command(ctx, message="Invalid filter given."))
+        nonDiscordLog.info(log_command(ctx, message="Invalid filter given."))
         raise commands.BadArgument(message="Invalid filter given.")
     await check_season(ctx, season)
     results = await parser.get_best_laps(rnd, season)
@@ -270,7 +276,7 @@ async def best(ctx, filter=None, season='current', rnd='last'):
         f"{results['season']} {results['race']}"
     )
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['pits', 'pitstops'])
 async def stops(ctx, filter, season='current', rnd='last'):
@@ -294,7 +300,7 @@ async def stops(ctx, filter, season='current', rnd='last'):
     if not season == 'current':
         if int(season) < 2012:
             await ctx.send("Pitstop data not available before 2012.")
-            logger.info(log_command(ctx, message="Tried to get pitstops before 2012."))
+            nonDiscordLog.info(log_command(ctx, message="Tried to get pitstops before 2012."))
             raise commands.BadArgument(message="Tried to get pitstops before 2012.")
     await check_season(ctx, season)
 
@@ -320,5 +326,5 @@ async def stops(ctx, filter, season='current', rnd='last'):
         f"{res['season']} {res['race']}"
     )
     await ctx.send(f"```\n{table}\n```")
-    logger.info(log_command(ctx))
+    nonDiscordLog.info(log_command(ctx))
 
