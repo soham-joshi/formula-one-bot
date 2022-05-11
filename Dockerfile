@@ -3,6 +3,6 @@ WORKDIR /demo
 ENV PYTHONBUFFERED 1
 RUN mkdir src 
 COPY . ./src
-RUN ls /app
+RUN ls /demo
 RUN pip install -r ./src/requirements.txt
 ENTRYPOINT ["python", "./src/app.py"]
