@@ -40,7 +40,7 @@ jobs:
         python UtilityTesting.py
     - name: Testing Live API Response
       run: |
-        python LiveApiTesting.py
+        python LiveAPITesting.py
     - name: Testing Mack API responses
       run: |
         python APITesting.py
