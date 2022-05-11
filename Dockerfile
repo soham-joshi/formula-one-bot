@@ -1,8 +1,8 @@
 FROM python:3.8-slim AS build
+WORKDIR /demo
 ENV PYTHONBUFFERED 1
-RUN mkdir demo 
-COPY . /demo
-RUN pip install --upgrade pip
-RUN cd /demo
-RUN pip install -r requirements.txt
-ENTRYPOINT ["python", "app.py"]
+RUN mkdir src 
+COPY . ./src
+RUN ls /app
+RUN pip install -r ./src/requirements.txt
+ENTRYPOINT ["python", "./src/app.py"]
