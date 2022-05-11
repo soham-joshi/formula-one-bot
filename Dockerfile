@@ -1,7 +1,7 @@
-FROM python:3.8-slim AS build
+FROM alpine:latest
 WORKDIR /home
 COPY . .
 RUN ls /home
 RUN echo $HOME
 RUN pip install -r requirements.txt
-CMD ["python3", "/home/app.py"]
+CMD ["python", "/home/app.py"]
