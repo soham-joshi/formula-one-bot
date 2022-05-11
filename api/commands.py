@@ -26,7 +26,7 @@ nonDiscordLog.addHandler(handler)
 def log_command(ctx, message = ""):
     channel = ctx.message.channel
     shard_id = ctx.guild.shard_id
-    shard = bot.get_shard(shard_id)
+    # shard = bot.get_shard(shard_id)
     user = ctx.message.author
 
     if(message == ""):
@@ -56,10 +56,10 @@ async def on_ready():
 
 @bot.event
 async def on_command(ctx):
-    channel = ctx.message.channel
-    shard_id = ctx.guild.shard_id
-    shard = bot.get_shard(shard_id)
-    user = ctx.message.author
+    # channel = ctx.message.channel
+    # shard_id = ctx.guild.shard_id
+    # shard = bot.get_shard(shard_id)
+    # user = ctx.message.author
     # print(f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
     nonDiscordLog.info(log_command(ctx))
 
