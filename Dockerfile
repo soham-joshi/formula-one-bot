@@ -1,7 +1,7 @@
 FROM python:3.8-slim AS build
 WORKDIR /home
 ENV PYTHONBUFFERED 1
-COPY . .
+COPY --from=build . .
 RUN ls /home
 RUN pip install -r requirements.txt
-ENTRYPOINT ["python3", "./app.py"]
+ENTRYPOINT ["python3", "/home/app.py"]
