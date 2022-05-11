@@ -14,10 +14,10 @@ from api.utils import make_table, filter_times, rank_best_lap_times, rank_pitsto
 from operator import itemgetter
 import logging
 
-logging.basicConfig(filename='discord.log', level=logging.DEBUG, format='%(levelname)s %(asctime)s %(message)s')
+logging.basicConfig(filename='/home/saksham_f1/F1LoggingFolder/discord.log', level=logging.DEBUG, format='%(levelname)s %(asctime)s %(message)s')
 
 nonDiscordLog = logging.getLogger('MyLogs')
-handler = logging.FileHandler(filename='FormulaOneLogs.log', encoding='utf-8', mode='w')
+handler = logging.FileHandler(filename='/home/saksham_f1/F1LoggingFolder/FormulaOneLogs.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(levelname)s %(asctime)s:%(name)s: %(message)s'))
 nonDiscordLog.addHandler(handler)
 
