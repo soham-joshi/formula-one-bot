@@ -1,3 +1,4 @@
+from cmath import log
 from discord import Colour, File
 from discord.activity import Activity, ActivityType
 from discord.embeds import Embed
@@ -13,7 +14,30 @@ from api.utils import make_table, filter_times, rank_best_lap_times, rank_pitsto
 from operator import itemgetter
 import logging
 
-logging.getLogger("discord").setLevel(logging.WARNING)
+logging.basicConfig(filename='discord.log', level=logging.DEBUG, format='%(levelname)s %(asctime)s %(message)s')
+
+nonDiscordLog = logging.getLogger('MyLogs')
+handler = logging.FileHandler(filename='FormulaOneLogs.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(levelname)s %(asctime)s:%(name)s: %(message)s'))
+nonDiscordLog.addHandler(handler)
+
+# logger = logging.getLogger(__name__)
+
+def log_command(ctx, message = ""):
+    channel = ctx.message.channel
+    shard_id = ctx.guild.shard_id
+    shard = bot.get_shard(shard_id)
+    user = ctx.message.author
+
+    if(message == ""):
+        # Which means it is a command log
+        return f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}.'
+    
+    else:
+        return f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}.' + " Message: " + message
+
+
+
 
 # Prefix includes the config symbol and the 'f1' name with hard-coded space
 bot = commands.AutoShardedBot(
@@ -25,7 +49,8 @@ bot = commands.AutoShardedBot(
 
 @bot.event
 async def on_ready():
-    print('I have logged in as {0.user}'.format(bot))
+    print('Bot logged in as {0.user}'.format(bot))
+    logging.info('Bot logged in as {0.user}'.format(bot))
 
 
 
@@ -35,15 +60,15 @@ async def on_command(ctx):
     shard_id = ctx.guild.shard_id
     shard = bot.get_shard(shard_id)
     user = ctx.message.author
-    print(f'{ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
-    
-    # logger.info()
+    # print(f'Command: {ctx.prefix}{ctx.command} in {channel} by {user} on shard {shard_id}')
+    nonDiscordLog.info(log_command(ctx))
 
 
 @bot.event
 async def on_command_completion(ctx):
     # await ctx.message.add_reaction(u'🏁')
-    print("Complete command")
+    print("Command completed!")
+    nonDiscordLog.info(log_command(ctx, "Command completed!"))
 
 
 # ===================
@@ -52,20 +77,22 @@ async def on_command_completion(ctx):
 
 
 @bot.command(aliases=['calendar', 'schedule'])
-async def races(ctx, *args):
+async def races(ctx, season = 'current' ):
     """Display the full race schedule for the current season."""
+    await check_season(ctx, season)
     result = await parser.get_race_schedule_calendar()
-    # print(result)
     # Use simple table to not exceed content limit
     table = make_table(result['data'], fmt='simple')
-    # target = await get_target(ctx, 'table')
     await ctx.send(f"**{result['season']} Formula 1 Race Calendar**\n")
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
+
 
 async def check_season(ctx, season):
     """Raise error if the given season is in the future."""
     if utils.is_future(season):
         await ctx.send(f"Can't predict future :thinking:")
+        nonDiscordLog.error(log_command(ctx, message='Given season is in the future.'))
         raise commands.BadArgument('Given season is in the future.')
 
 @bot.command(aliases=['teams', 'constructors'])
@@ -77,7 +104,7 @@ async def season_standings_teams(ctx, season='current'):
         !f1 wcc [season]   WCC standings from [season].
     """
     await check_season(ctx, season)
-    result = await parser.get_team_standings(season)
+    result = await parser.get_season_team_standings(season)
     table = make_table(result['data'])
     
     await ctx.send(
@@ -85,6 +112,7 @@ async def season_standings_teams(ctx, season='current'):
         f"Season: {result['season']} Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['drivers', 'championship'])
 async def world_drivers_championship(ctx, season='current'):
@@ -101,6 +129,7 @@ async def world_drivers_championship(ctx, season='current'):
         f"Season: {result['season']} Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['grid'])
 async def season_grid(ctx, season='current'):
@@ -119,6 +148,7 @@ async def season_grid(ctx, season='current'):
         f"Round: {result['round']}\n"
     )
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
 
 @bot.command(aliases=['source', 'git'])
@@ -142,6 +172,7 @@ async def results(ctx, season='current', rnd='last'):
     table = make_table(result['data'], fmt='simple')
     await ctx.send(f"**Race Results - {result['race']} ({result['season']})**")
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['quali'])
 async def qualifying(ctx, season='current', rnd='last'):
@@ -157,61 +188,63 @@ async def qualifying(ctx, season='current', rnd='last'):
     table = make_table(result['data'])
     await ctx.send(f"**Qualifying Results - {result['race']} ({result['season']})**")
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
-@bot.command(aliases=['driver'])
-async def career(ctx, driver_id):
-    """Career stats for the `driver_id`.
-    Includes total poles, wins, points, seasons, teams, fastest laps, and DNFs.
-    Parameters:
-    -----------
-    `driver_id`
-        Supported Ergast API ID, e.g. 'alonso', 'michael_schumacher', 'vettel', 'di_resta'.
-    Usage:
-    --------
-        !f1 career vettel | VET | 55   Get career stats for Sebastian Vettel.
-    """
-    await ctx.send("*Gathering driver data, this may take a few moments...*")
-    driver = parser.get_driver_info(driver_id)
-    result = await parser.get_driver_career(driver)
-    thumb_url_task = asyncio.create_task(parser.get_wiki_thumbnail(driver['url']))
-    season_list = result['data']['Seasons']['years']
-    champs_list = result['data']['Championships']['years']
-    embed = Embed(
-        title=f"**{result['driver']['firstname']} {result['driver']['surname']} Career**",
-        url=result['driver']['url'],
-        colour=Colour.teal(),
-    )
-    embed.set_thumbnail(url=await thumb_url_task)
-    embed.add_field(name='Number', value=result['driver']['number'], inline=True)
-    embed.add_field(name='Nationality', value=result['driver']['nationality'], inline=True)
-    embed.add_field(name='Age', value=result['driver']['age'], inline=True)
-    embed.add_field(
-        name='Seasons',
-        # Total and start to latest season
-        value=f"{result['data']['Seasons']['total']} ({season_list[0]}-{season_list[len(season_list)-1]})",
-        inline=True
-    )
-    embed.add_field(name='Wins', value=result['data']['Wins'], inline=True)
-    embed.add_field(name='Poles', value=result['data']['Poles'], inline=True)
-    embed.add_field(
-        name='Championships',
-        # Total and list of seasons
-        value=(
-            f"{result['data']['Championships']['total']} " + "\n"
-            + ", ".join(y for y in champs_list if champs_list)
-        ),
-        inline=False
-    )
-    embed.add_field(
-        name='Teams',
-        # Total and list of teams
-        value=(
-            f"{result['data']['Teams']['total']} " + "\n"
-            + ", ".join(t for t in result['data']['Teams']['names'])
-        ),
-        inline=False
-    )
-    await ctx.send(embed=embed)
+# @bot.command(aliases=['driver'])
+# async def career(ctx, driver_id):
+#     """Career stats for the `driver_id`.
+#     Includes total poles, wins, points, seasons, teams, fastest laps, and DNFs.
+#     Parameters:
+#     -----------
+#     `driver_id`
+#         Supported Ergast API ID, e.g. 'alonso', 'michael_schumacher', 'vettel', 'di_resta'.
+#     Usage:
+#     --------
+#         !f1 career vettel | VET | 55   Get career stats for Sebastian Vettel.
+#     """
+#     await ctx.send("*Gathering driver data, this may take a few moments...*")
+#     driver = parser.get_driver_info(driver_id)
+#     result = await parser.get_driver_career(driver)
+#     thumb_url_task = asyncio.create_task(parser.get_wiki_thumbnail(driver['url']))
+#     season_list = result['data']['Seasons']['years']
+#     champs_list = result['data']['Championships']['years']
+#     embed = Embed(
+#         title=f"**{result['driver']['firstname']} {result['driver']['surname']} Career**",
+#         url=result['driver']['url'],
+#         colour=Colour.teal(),
+#     )
+#     embed.set_thumbnail(url=await thumb_url_task)
+#     embed.add_field(name='Number', value=result['driver']['number'], inline=True)
+#     embed.add_field(name='Nationality', value=result['driver']['nationality'], inline=True)
+#     embed.add_field(name='Age', value=result['driver']['age'], inline=True)
+#     embed.add_field(
+#         name='Seasons',
+#         # Total and start to latest season
+#         value=f"{result['data']['Seasons']['total']} ({season_list[0]}-{season_list[len(season_list)-1]})",
+#         inline=True
+#     )
+#     embed.add_field(name='Wins', value=result['data']['Wins'], inline=True)
+#     embed.add_field(name='Poles', value=result['data']['Poles'], inline=True)
+#     embed.add_field(
+#         name='Championships',
+#         # Total and list of seasons
+#         value=(
+#             f"{result['data']['Championships']['total']} " + "\n"
+#             + ", ".join(y for y in champs_list if champs_list)
+#         ),
+#         inline=False
+#     )
+#     embed.add_field(
+#         name='Teams',
+#         # Total and list of teams
+#         value=(
+#             f"{result['data']['Teams']['total']} " + "\n"
+#             + ", ".join(t for t in result['data']['Teams']['names'])
+#         ),
+#         inline=False
+#     )
+#     await ctx.send(embed=embed)
+#     nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['bestlap'])
 async def best(ctx, filter=None, season='current', rnd='last'):
@@ -231,6 +264,7 @@ async def best(ctx, filter=None, season='current', rnd='last'):
     """
     if filter not in ['all', 'top', 'fastest', 'slowest', 'bottom', None]:
         await ctx.send("Invalid filter given.")
+        nonDiscordLog.info(log_command(ctx, message="Invalid filter given."))
         raise commands.BadArgument(message="Invalid filter given.")
     await check_season(ctx, season)
     results = await parser.get_best_laps(rnd, season)
@@ -242,6 +276,7 @@ async def best(ctx, filter=None, season='current', rnd='last'):
         f"{results['season']} {results['race']}"
     )
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
 
 @bot.command(aliases=['pits', 'pitstops'])
 async def stops(ctx, filter, season='current', rnd='last'):
@@ -265,6 +300,7 @@ async def stops(ctx, filter, season='current', rnd='last'):
     if not season == 'current':
         if int(season) < 2012:
             await ctx.send("Pitstop data not available before 2012.")
+            nonDiscordLog.info(log_command(ctx, message="Tried to get pitstops before 2012."))
             raise commands.BadArgument(message="Tried to get pitstops before 2012.")
     await check_season(ctx, season)
 
@@ -290,3 +326,5 @@ async def stops(ctx, filter, season='current', rnd='last'):
         f"{res['season']} {res['race']}"
     )
     await ctx.send(f"```\n{table}\n```")
+    nonDiscordLog.info(log_command(ctx))
+

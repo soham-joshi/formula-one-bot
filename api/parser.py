@@ -57,7 +57,7 @@ async def get_season_team_standings(season):
                 {
                     'Pos': int(standing['position']),
                     'Team': standing.constructor.find('name').string,
-                    'Points': int(standing['points']),
+                    'Points': float(standing['points']),
                     'Wins': int(standing['wins']),
                 }
             )
@@ -353,17 +353,33 @@ def get_driver_info(driver_id):
         if no match found.
     """
     driver = utils.find_driver(driver_id, DRIVERS)
-    res = {
-        'firstname': driver['givenName'],
-        'surname': driver['familyName'],
-        'code': driver.get('code', None),
-        'id': driver['driverId'],
-        'url': driver.get('url', None),
-        'number': driver.get('permanentNumber', None),
-        'age': utils.age(driver['dateOfBirth'][:4]),
-        'nationality': driver['nationality'],
-    }
-    return res
+    
+    if(driver != None):
+        res = {
+            'firstname': driver['givenName'],
+            'surname': driver['familyName'],
+            'code': driver.get('code', None),
+            'id': driver['driverId'],
+            'url': driver.get('url', None),
+            'number': driver.get('permanentNumber', None),
+            'age': utils.age(driver['dateOfBirth'][:4]),
+            'nationality': driver['nationality'],
+        }
+    # print(res)
+
+        return res
+    else:
+        return {
+            'firstname': "",
+            'surname': "",
+            'code': "",
+            'id': "",
+            'url': "",
+            'number': "",
+            'age': "",
+            'nationality': ""
+        }
+
 async def get_best_laps(rnd, season):
     """Get the best lap for each driver.
     Parameters

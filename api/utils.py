@@ -7,7 +7,6 @@ from datetime import date, datetime
 from api.errors import MessageTooLongError
 
 from api.config import DATA_DIR
-# from f1.errors import MessageTooLongError, DriverNotFoundError
 
 def date_parser(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').strftime('%d %b')
