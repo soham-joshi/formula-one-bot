@@ -4,4 +4,4 @@ ENV PYTHONBUFFERED 1
 COPY . .
 RUN ls /demo
 RUN pip install -r requirements.txt
-ENTRYPOINT ["python", "./app.py"]
+ENTRYPOINT ["python", "./demo/app.py"]
